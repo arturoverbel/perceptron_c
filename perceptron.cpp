@@ -45,51 +45,44 @@ float scalar_mult(  vector x, vector y)
 
 
 
-float net(  vector x )
-{
+float net(  vector x ) {
   return( (scalar_mult( x, w ) + bias > 0.0));
 }
 
 
-void educate_net()
-{
-  vector x;
-  int i, j, correct_result;
-
-  for ( i = 0 ; i < total ; i++ )
-    {
-      x = test[i];
-      correct_result = hits[i];
-      
-      if ( net(x) != correct_result )
-        if ( correct_result == 0 )
-          {
-            
-            for (j=0;j<NUM;j++) w.p[j] -= x.p[j];
-            bias -= 1.0;
-          }
-        else
-          {
-         
-            for (j=0;j<NUM;j++) w.p[j] += x.p[j];
-            bias += 1.0;
-          }
-    }
+void educate_net() {
+	vector x;
+	int i, j, correct_result;
+	
+	for ( i = 0 ; i < total ; i++ )
+	{
+		x = test[i];
+		correct_result = hits[i];
+		
+		if ( net(x) != correct_result )
+			if ( correct_result == 0 ) {
+				for (j=0;j<NUM;j++) w.p[j] -= x.p[j];
+				bias -= 1.0;
+			}
+			else {
+			
+				for (j=0;j<NUM;j++) w.p[j] += x.p[j];
+				bias += 1.0;
+			}
+	}
 }
 
 
 
-int check_performance()
-{
-  vector x;
-  int j, count=0;
-  for ( j = 0 ; j < total ; j++ )
-    {
-      x = test[j];
-      if ( net(x) == hits[j] )
-        count++;
-    }
-  return count;
+int check_performance() {
+	vector x;
+	int j, count=0;
+	for ( j = 0 ; j < total ; j++ ) {
+		x = test[j];
+		if ( net(x) == hits[j] )
+			count++;
+		}
+	return count;
 }
 
 int checker(char input[],char check[])
@@ -212,16 +205,55 @@ int get_data_nand() {
 		hits[ total++ ] = 0;  
 	}
 	
-	fscanf( fd, "%d", &negnum); {
-		printf("Error b");
+	fscanf( fd, "%d", &negnum);
+	if ((negnum+total) > LIMIT) {
+		printf("Error");
 		exit(21);
 	}
+	
 	
 	for ( i = 0 ; i < negnum ; i++ ) {
 		fscanf( fd, "%f %f", &x, &y);
 		test[ total ].p[0] = x ;
 		test[ total ].p[1] = y ;
 		hits[ total++ ] = 1; 
+	}
+	
+	return (0) ;
+}
+
+int get_data_xor() {
+	const char* FileName = "datos_xor.dat";
+	
+	FILE *fd;
+	int i, posnum, negnum;
+	float x,y;
+	
+	if ( (fd = fopen(FileName,"r")) == NULL ){
+		printf ("no-input-file");
+		exit(10);
+	}
+	
+	total = 0;
+	
+	fscanf( fd, "%d", &posnum);
+	if (posnum > LIMIT) {
+		printf("Error a");
+		exit(20);
+	}
+	
+	for ( i = 0 ; i < posnum ; i++ ){
+		fscanf( fd, "%f %f", &x, &y);
+		test[ total ].p[0] = x;
+		test[ total ].p[1] = y;
+		
+		if(x == y){
+			hits[ total ] = 0;
+		} else {
+			hits[ total ] = 1;
+		}
+			
+		total++;
 	}
 	
 	return (0) ;
@@ -245,6 +277,8 @@ main() {
 		get_data_nand();
 	else if( checker(operador, "nor") )
 		get_data_nor(); 
+	else if( checker(operador, "xor") )
+		get_data_xor();
 	else{
 		printf("\n\nNo se reconoce Operador.");
 		exit(1);
