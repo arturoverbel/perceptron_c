@@ -148,7 +148,7 @@ void educate_net() {
 		x = test[i];
 		correct_result = hits[i];
 		
-		if ( net(x) != correct_result )
+		if ( net(x) != correct_result ){
 			if ( correct_result == 0 ) {
 				for (j=0;j<NUM;j++) 
 					w.p[j] -= x.p[j];
@@ -160,6 +160,10 @@ void educate_net() {
 					w.p[j] += x.p[j];
 				bias += 1.0;
 			}
+			//printf("%f %f\n",x.p[0], x.p[1]);
+			//printf("%f %f %f\n",w.p[0], w.p[1], bias);
+			//printf("--------------------------\n");
+		}
 	}
 }
 
@@ -392,7 +396,8 @@ main() {
 	
 	for(i=0;i<total;i++) {
 		print_vector(test[i]);
-		printf("%f\n",net(test[i]));
+		if( checker(operador, "xor") ) printf("%f\n",net_xor(test[i]));
+		else printf("%f\n",net(test[i]));
 	}
 	
 	/*aqui se ponen los datos para probar la red*/
@@ -403,7 +408,8 @@ main() {
 	printf("Datos de prueba\n");
 	
 	print_vector(x);
-	printf("%f\n",net(x));
+	if( checker(operador, "xor") ) printf("%f\n",net_xor(x));
+	else printf("%f\n",net(x));
 	
 	getchar(); getchar();
 }
