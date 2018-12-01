@@ -15,16 +15,16 @@ vector w, test[LIMIT], prueba[LIMIT];
 
 // For RED xor 
 //****************
-float w11 = 0.5;
-float w12 = -0.5;
-float w13 = 0.5;
-float w14 = -0.5;
-float w21 = 0.5;
-float w22 = 0.5;
+float w11 = 0.5; bool turn_w11 = false;
+float w12 = -0.5; bool turn_w12 = true;
+float w13 = -0.5; bool turn_w13 = true;
+float w14 = 0.5; bool turn_w14 = false;
+float w21 = 0.5; bool turn_w21 = false;
+float w22 = 0.5; bool turn_w22 = false;
 
-float u1 = 0.5;
-float u2 = 0.5;
-float u3 = 0.5;
+float u1 = 0.5; bool turn_u1 = false;
+float u2 = 0.5; bool turn_u2 = false;
+float u3 = 0.5; bool turn_u3 = false;
 
 //****************
 
@@ -63,49 +63,73 @@ float scalar_mult_params(
 	float first_w,
 	float second_w,
 	float check_u) {
-		if ( (x*first_w) + (y*second_w) >= check_u ) return 1.0
-		else return 0.0
+		if ( (x*first_w) + (y*second_w) >= check_u ) return 1.0;
+		else return 0.0;
 }
 
 float net_xor(  vector x ) {
 	
-	y1 = scalar_mult_params(x.p[0], x.p[1], w11, w13, u1);
-	y2 = scalar_mult_params(x.p[0], x.p[1], w12, w14, u2);
-	y = scalar_mult_params(y1, y2, w21, w22, u3);
+	float y1 = scalar_mult_params(x.p[0], x.p[1], w11, w13, u1);
+	float y2 = scalar_mult_params(x.p[0], x.p[1], w12, w14, u2);
+	float y = scalar_mult_params(y1, y2, w21, w22, u3);
 	
 	return y;
-}
-
-float net_xor_all_data(  vector x ) {
-	
-	y1 = scalar_mult_params(x.p[0], x.p[1], w11, w13, u1);
-	y2 = scalar_mult_params(x.p[0], x.p[1], w12, w14, u2);
-	y = scalar_mult_params(y1, y2, w21, w22, u3);
-	
-	return ;
 }
 
 void educate_net_xor() {
 	vector x;
 	int i, j, correct_result;
+	float unit = 0.1;
 	
 	for ( i = 0 ; i < total ; i++ ) {
 		x = test[i];
 		correct_result = hits[i];
 		
-		if ( net_xor(x) != correct_result )
-			if ( correct_result == 0 ) {
-				for (j=0;j<NUM;j++) 
-					w.p[j] -= x.p[j];
-				bias -= 1.0;
-			}
-			else {
+		if ( net_xor(x) != correct_result ) {
+			w11 += (turn_w11) ? unit : -1 * unit;
+			w12 += (turn_w12) ? unit : -1 * unit;
+			w13 += (turn_w13) ? unit : -1 * unit;
+			w14 += (turn_w14) ? unit : -1 * unit;
+			w21 += (turn_w21) ? unit : -1 * unit;
+			w22 += (turn_w22) ? unit : -1 * unit;
 			
-				for (j=0;j<NUM;j++)
-					w.p[j] += x.p[j];
-				bias += 1.0;
-			}
+			u1 += (turn_u1) ? unit : -1 * unit;;
+			u2 += (turn_u2) ? unit : -1 * unit;
+			u3 += (turn_u3) ? unit : -1 * unit;
+			
+			if( w11 < 0) turn_w11 = true;
+			else if( w11 > 0.5) turn_w11 = false;
+			if( w12 > 0) turn_w12 = false;
+			else if( w12 < -0.5) turn_w12 = true;
+			if( w13 > 0) turn_w13 = false;
+			else if( w13 < -0.5) turn_w13 = true;
+			if( w14 < 0) turn_w14 = true;
+			else if( w14 > 0.5) turn_w14 = false;
+			if( w21 < 0) turn_w21 = true;
+			else if( w21 > 0.5) turn_w21 = false;
+			if( w22 < 0) turn_w22 = true;
+			else if( w22 > 0.5) turn_w22 = false;
+			
+			if( u1 < 0) turn_u1 = true;
+			else if( u1 > 0.5) turn_u1 = false;
+			if( u2 < 0) turn_u2 = true;
+			else if( u2 > 0.5) turn_u2 = false;
+			if( u3 < 0) turn_u3 = true;
+			else if( u3 > 0.5) turn_u3 = false;
+			
+		}
 	}
+}
+
+int check_performance_xor() {
+	vector x;
+	int j, count=0;
+	for ( j = 0 ; j < total ; j++ ) {
+		x = test[j];
+		if ( net_xor(x) == hits[j] )
+			count++;
+		}
+	return count;
 }
 
 //****************
@@ -348,12 +372,20 @@ main() {
 		exit(1);
 	}
 	
-	while ( ((right=check_performance()) != total ) && ( i++ < SESSIONS ) )
-		educate_net();
-	
-	if ( check_performance() != total){
-		printf("fallo !");
-		exit(1);
+	if( checker(operador, "xor") ){
+		while ( ((right=check_performance_xor()) != total ) && ( i++ < SESSIONS ) )
+			educate_net_xor();
+		if ( check_performance_xor() != total){
+			printf("fallo Xor");
+			exit(1);
+		}
+	}else{
+		while ( ((right=check_performance()) != total ) && ( i++ < SESSIONS ) )
+			educate_net();
+		if ( check_performance() != total){
+			printf("fallo !");
+			exit(1);
+		}
 	}
 	
 	printf("Datos de entrenamiento\n");	
