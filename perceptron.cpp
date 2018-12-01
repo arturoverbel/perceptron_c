@@ -7,46 +7,112 @@
 #define LIMIT 100     
 #define SESSIONS 3000 
 
-typedef struct
-{
-  float p[NUM];
+typedef struct { 
+	float p[NUM]; 
 } vector;
 
 vector w, test[LIMIT], prueba[LIMIT];
+
+// For RED xor 
+//****************
+float w11 = 0.5;
+float w12 = -0.5;
+float w13 = 0.5;
+float w14 = -0.5;
+float w21 = 0.5;
+float w22 = 0.5;
+
+float u1 = 0.5;
+float u2 = 0.5;
+float u3 = 0.5;
+
+//****************
+
 int hits[LIMIT], total, pruebanum;
 
 float bias = 0.5;
 
+void print_vector( vector v )  {
+	int i;
+	for ( i = 0 ; i < NUM ; i++ ) printf("  %.4f ", v.p[i] );
+	printf("\n");
+}
 
-void print_vector( vector v ) 
-{
-  int i;
-  for ( i = 0 ; i < NUM ; i++ ) printf("  %.4f ", v.p[i] );
-  printf("\n");
+float sum(  vector x) {
+	int i;
+	float s = 0.0;
+	for ( i = 0 ; i < NUM ; i++ )  s += x.p[i];
+	return s;
 }
 
 
-float sum(  vector x)
-{
-  int i;
-  float s = 0.0;
-  for ( i = 0 ; i < NUM ; i++ )  s += x.p[i];
-  return s;
+float scalar_mult(  vector x, vector y) {
+	int i;
+	float s = 0.0;
+	for ( i = 0 ; i < NUM ; i++ )  
+		s += ( x.p[i] * y.p[i] );
+	return s;
 }
 
 
-float scalar_mult(  vector x, vector y)
-{
-  int i;
-  float s = 0.0;
-  for ( i = 0 ; i < NUM ; i++ )  s += ( x.p[i] * y.p[i] );
-  return s;
+// For RED xor 
+//****************
+float scalar_mult_params( 
+	float x,
+	float y,
+	float first_w,
+	float second_w,
+	float check_u) {
+		if ( (x*first_w) + (y*second_w) >= check_u ) return 1.0
+		else return 0.0
 }
 
+float net_xor(  vector x ) {
+	
+	y1 = scalar_mult_params(x.p[0], x.p[1], w11, w13, u1);
+	y2 = scalar_mult_params(x.p[0], x.p[1], w12, w14, u2);
+	y = scalar_mult_params(y1, y2, w21, w22, u3);
+	
+	return y;
+}
+
+float net_xor_all_data(  vector x ) {
+	
+	y1 = scalar_mult_params(x.p[0], x.p[1], w11, w13, u1);
+	y2 = scalar_mult_params(x.p[0], x.p[1], w12, w14, u2);
+	y = scalar_mult_params(y1, y2, w21, w22, u3);
+	
+	return ;
+}
+
+void educate_net_xor() {
+	vector x;
+	int i, j, correct_result;
+	
+	for ( i = 0 ; i < total ; i++ ) {
+		x = test[i];
+		correct_result = hits[i];
+		
+		if ( net_xor(x) != correct_result )
+			if ( correct_result == 0 ) {
+				for (j=0;j<NUM;j++) 
+					w.p[j] -= x.p[j];
+				bias -= 1.0;
+			}
+			else {
+			
+				for (j=0;j<NUM;j++)
+					w.p[j] += x.p[j];
+				bias += 1.0;
+			}
+	}
+}
+
+//****************
 
 
 float net(  vector x ) {
-  return( (scalar_mult( x, w ) + bias > 0.0));
+	return( (scalar_mult( x, w ) + bias > 0.0));
 }
 
 
@@ -54,19 +120,20 @@ void educate_net() {
 	vector x;
 	int i, j, correct_result;
 	
-	for ( i = 0 ; i < total ; i++ )
-	{
+	for ( i = 0 ; i < total ; i++ ) {
 		x = test[i];
 		correct_result = hits[i];
 		
 		if ( net(x) != correct_result )
 			if ( correct_result == 0 ) {
-				for (j=0;j<NUM;j++) w.p[j] -= x.p[j];
+				for (j=0;j<NUM;j++) 
+					w.p[j] -= x.p[j];
 				bias -= 1.0;
 			}
 			else {
 			
-				for (j=0;j<NUM;j++) w.p[j] += x.p[j];
+				for (j=0;j<NUM;j++)
+					w.p[j] += x.p[j];
 				bias += 1.0;
 			}
 	}
@@ -85,8 +152,7 @@ int check_performance() {
 	return count;
 }
 
-int checker(char input[],char check[])
-{
+int checker(char input[],char check[]) {
     int i,result=1;
     for(i=0; input[i]!='\0' || check[i]!='\0'; i++) {
         if(input[i] != check[i]) {
@@ -259,8 +325,6 @@ int get_data_xor() {
 	return (0) ;
 }
 
-
-
 main() {
 	char operador [80];
 	printf ("Ingrese Operador (or, nand, ..): ");
@@ -286,9 +350,9 @@ main() {
 	
 	while ( ((right=check_performance()) != total ) && ( i++ < SESSIONS ) )
 		educate_net();
-	  
+	
 	if ( check_performance() != total){
-		printf("fallo");
+		printf("fallo !");
 		exit(1);
 	}
 	
